@@ -16,7 +16,7 @@ steps:
 - task: SSISDeploy@0
   displayName: 'Deploy ISPAC'
   inputs:
-    sourcePath: '$(System.DefaultWorkingDirectory)/SSIS_POC/drop'
+    sourcePath: 'C:\agent\_work\r2\a\SSIS_POC\drop'
     destinationType: ssisdb
     destinationServer: 'MSBIs-sandbox'
     destinationPath: /SSISDB/test
