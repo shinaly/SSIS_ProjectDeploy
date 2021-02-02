@@ -1,0 +1,85 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: 'MSBIAgentPool'
+
+variables:
+  SSISDBServerAdminPassword: 'Data Source=MSBIs-sandbox;Initial Catalog=Test;Provider=SQLOLEDB.1;Integrated Security=SSPI;Application Name=SSIS-Package-{7EFFE668-9B67-44CC-95B7-38A7B52AAFAC}MSBIs-sandbox.Test;'
+
+steps:
+- task: SSISDeploy@0
+  displayName: 'Deploy ISPAC'
+  inputs:
+    sourcePath: '$(System.DefaultWorkingDirectory)/SSIS_POC/drop'
+    destinationType: ssisdb
+    destinationServer: 'MSBIs-sandbox'
+    destinationPath: /SSISDB/test
+    authType: winAuth
+
+
+
+- task: SSISCatalog@0
+  displayName: 'Configure SSIS Catalog'
+  inputs:
+    configSource: inline
+    configContent: |
+     {
+       "folders": [
+         {
+           "name": "test",
+           "description": "devops demo folder",
+           "projects": [
+             {
+               "name": "SSIS_POC1",
+               "parameters": [
+                 {
+                   "name": "password",
+                   "container": "Package.dtsx",
+                   "value": "passwd",
+                   "valueType": "referenced"
+                 },
+               ],
+               "references": [
+                 {
+                   "environmentName": "Dev",
+                   "environmentFolder": "test"
+                 },
+                 {
+                   "environmentName": "Dev",
+                   "environmentFolder": "."
+                 }
+               ]
+             }
+           ],
+           "environments": [
+             {
+               "name": "Dev",
+               "description": "test",
+               "variables": [
+                 {
+                   "name": "passwd",
+                   "type": "string",
+                   "description": "",
+                   "value": "$(SSISDBServerAdminPassword)",
+                   "sensitive": true
+                 },
+               ]
+             }
+           ]
+         }
+       ]
+     }
+    targetServer: 'MSBIs-sandbox'
+    authType: win
+
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
